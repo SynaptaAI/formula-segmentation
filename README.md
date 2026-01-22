@@ -12,7 +12,6 @@ formula-driven learning objects from textbook PDFs for Synapta.
 - Concept-ID linking (via taxonomy TSV)
 
 ## Status
-- Experimental / personal prototype
 - Focused on validated baseline, not perfect accuracy
 - Will be iterated and potentially migrated into Synapta org repo
 
