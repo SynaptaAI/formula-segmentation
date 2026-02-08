@@ -207,6 +207,21 @@ marimo/_lsp/
 __marimo__/
 .env
 
-# Local Data & Outputs
+# Local Data & Outputs — track selected data/outputs; exclude the rest
 data/
+!data/
+!data/*
+data/SYNAPTA/
+data/cache/
+data/.cache/
+data/toaz.info-investments-solution-manual-bodie-kane-marcus-mohanty-pr_7b544bc0b0e29a546fcb359e445347a8.pdf
+.DS_Store
 outputs/
+!outputs/
+!outputs/**
+outputs/*.code-workspace
+outputs/.cache/
+outputs/chapter9_segments.json
+outputs/chapter9_segments_claude.json
+outputs/chapter9_segments_groq.json
+outputs/Investments_segments_claude.json
