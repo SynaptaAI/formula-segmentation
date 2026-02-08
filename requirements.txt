@@ -1,0 +1,9 @@
+pymupdf
+pydantic
+numpy
+pandas
+openpyxl
+python-dotenv
+openai
+anthropic
+google-genai
