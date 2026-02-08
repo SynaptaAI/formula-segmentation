@@ -2540,7 +2540,7 @@ class Linker:
                 if not relevant_formulas:
                     relevant_formulas = formulas[:10]
                 batch_candidates = self.solution_generator.generate_candidates_batch(
-                    q_list, relevant_formulas, max_per_batch=5
+                    q_list, relevant_formulas, max_per_batch=10
                 )
                 results: List[Tuple[QuestionSegment, SolutionSegment]] = []
                 for q, cand_list in zip(q_list, batch_candidates):

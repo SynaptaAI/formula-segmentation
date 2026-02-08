@@ -1022,11 +1022,23 @@ Formula: {formula_text}
                 print(f"LLM Error (Anthropic extract_formula_summary): {e}")
         return f"Formula computing {', '.join([v.symbol for v in variables[:3]])}" if variables else None
 
+    def _serialize_batch_for_cache(
+        self, result: List[Tuple[List[VariableDefinition], Optional[str]]]
+    ) -> List[Tuple[List[Dict[str, Any]], Optional[str]]]:
+        """Make batch result JSON-serializable for disk cache."""
+        return [([(v.model_dump() if hasattr(v, 'model_dump') else v.dict()) for v in vars_list], summary) for (vars_list, summary) in result]
+
+    def _deserialize_batch_cached(
+        self, cached: List[Tuple[List[Dict[str, Any]], Optional[str]]]
+    ) -> List[Tuple[List[VariableDefinition], Optional[str]]]:
+        """Restore batch result from disk cache."""
+        return [(build_variable_definitions(list(vars_list)), summary) for (vars_list, summary) in cached]
+
     def extract_variables_batch(
         self,
         items: List[Tuple[str, str, Optional[List[str]]]],
     ) -> List[Tuple[List[VariableDefinition], Optional[str]]]:
-        """Batch variable extraction + one-line summary per formula. Returns [(variables, summary), ...]."""
+        """Batch variable extraction + one-line summary per formula. Returns [(variables, summary), ...]. Uses disk cache when enable_cache=True."""
         if not self.client or items is None or len(items) == 0:
             return [([], None) for _ in (items or [])]
         parts = []
@@ -1044,6 +1056,11 @@ Important: Treat subscripted variables as single symbols. E.g. R_M, r_f, beta_GE
 Return a JSON object with a single key "results" whose value is an array of objects. Each object has "variables" (array of {"symbol", "meaning", "units"?}) and "summary" (one-line string, or null). Same order as [1], [2], ... above.
 Example: {"results": [{"variables": [{"symbol":"r_f","meaning":"risk-free rate","units":null}], "summary": "Present value of a bond"}, {"variables": [], "summary": null}]}
 Return ONLY valid JSON."""
+        cache_key = self._get_cache_key(prompt, "extract_variables_batch")
+        if self.enable_cache and self.disk_cache:
+            cached = self.disk_cache.get(cache_key)
+            if cached is not None:
+                return self._deserialize_batch_cached(cached)
         for attempt in range(3):
             try:
                 if attempt > 0:
@@ -1082,7 +1099,13 @@ Return ONLY valid JSON."""
                     out.append((build_variable_definitions(vars_list), summary))
                 while len(out) < len(items):
                     out.append(([], None))
-                return out[:len(items)]
+                result = out[:len(items)]
+                if self.enable_cache and self.disk_cache and result:
+                    try:
+                        self.disk_cache.set(cache_key, self._serialize_batch_for_cache(result))
+                    except Exception as e:
+                        print(f"    Cache write (batch) skipped: {e}")
+                return result
             except json.JSONDecodeError as e:
                 if attempt == 0:
                     print(f"    Warning: JSON parse failed. Response preview: {raw[:200] if raw else 'None'}...")

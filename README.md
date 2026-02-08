@@ -97,7 +97,12 @@ Question metadata includes numbering preservation (Q1, 1., (a)(b)), type (MCQ, S
 
 **Rough runtime (Investments, ~600 pages):** With `--no-solutions`: ~15–30 min. With solutions and validation: ~30–90+ min. Use `--validate-top 1` to validate only the top candidate per question and reduce latency.
 
-**Cache:** Variable/LaTeX caches are in-memory (per run). Solution cache is on disk at `outputs/.cache/solution_cache.json`; use `--clear-cache` to force fresh solution generation.
+**Runtime tips (full book):**  
+- First pass: `--full-book --no-solutions` to get segments and edges quickly; variable extraction is batched and (for Claude) cached on disk in `.cache/llm_cache.db`, so re-runs skip repeated formula API calls.  
+- Then run with solutions for selected chapters, or full book with `--validate-top 1` (validation is the main cost when generating synthetic solutions).  
+- Use `--no-validate` to attach the best candidate without LLM validation (fastest, lower confidence).
+
+**Cache:** Variable extraction batch (Claude/OpenAI) uses disk cache in `.cache/llm_cache.db` when `enable_cache=True`. LaTeX/variable in-memory caches are per run. Solution cache is at `outputs/.cache/solution_cache.json`; use `--clear-cache` to force fresh solution generation.
 
 ---
 
